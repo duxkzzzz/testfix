@@ -463,7 +463,7 @@
 		
 			for _, v in flags do
 				if type(v) == "table" and v.key then
-					Config[_] = {active = v.active, mode = v.mode, key = tostring(v.key)}
+				Config[_] = {active = v.active, mode = v.mode, key = tostring(v.key):gsub("Enum%.KeyCode%.", ""):gsub("Enum%.UserInputType%.", "")}
 				elseif type(v) == "table" and v["Transparency"] and v["Color"] then
 					Config[_] = {Transparency = v["Transparency"], Color = v["Color"]:ToHex()}
 				else
@@ -1694,7 +1694,7 @@
 				end})
 				local section = column:section({name = "Other"})
 				section:label({name = "UI Bind"})
-				:keybind({callback = window.set_menu_visibility, key = Enum.KeyCode.Insert})
+				:keybind({flag = "menu_keybind", callback = window.set_menu_visibility, key = Enum.KeyCode.Insert, mode = "toggle"})
 				section:toggle({name = "Keybind List", flag = "keybind_list", callback = function(bool)
 					library.keybind_list_frame.Visible = bool
 				end})
@@ -4323,25 +4323,30 @@
 						cfg.callback(cfg.active or false)
 					elseif type(input) == "table" then
 						if type(input.key) == "string" then
-							if input.key == "none" then
+							if input.key == "none" or input.key == "" then
 								cfg.key = "none"
 							else
-								local ok, result = pcall(library.convert_enum, library, input.key)
-								cfg.key = (ok and result ~= Enum.KeyCode.Escape) and result or "none"
+								-- Support both legacy format (Enum.KeyCode.X) and new format (X)
+								local keyName = input.key
+								if keyName:find("^Enum%.") then
+									-- Legacy format: already contains full enum path
+									keyName = keyName:gsub("Enum%.KeyCode%.", ""):gsub("Enum%.UserInputType%.", "")
+								end
+								local ok, result = pcall(library.convert_enum, library, "Enum.KeyCode." .. keyName)
+								if not ok then
+									ok, result = pcall(library.convert_enum, library, "Enum.UserInputType." .. keyName)
+								end
+								if ok and result ~= Enum.KeyCode.Escape then
+									cfg.key = result
+								else
+									cfg.key = "none"
+								end
 							end
 						else
 							cfg.key = (input.key == Enum.KeyCode.Escape) and "none" or (input.key or "none")
 						end
-
-						cfg.mode = input.mode or "toggle"
-
-						if input.active then
-							cfg.active = input.active
-						end
-
 						local text = tostring(cfg.key) ~= "Enums" and (keys[cfg.key] or tostring(cfg.key):gsub("Enum.", "")) or nil
 						local __text = text and (tostring(text):gsub("KeyCode.", ""):gsub("UserInputType.", ""))
-						
 						key_text.Text = string.lower(__text) or "none"
 						cfg.key_name = __text
 					end 
