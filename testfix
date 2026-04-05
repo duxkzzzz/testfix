@@ -1753,18 +1753,23 @@
 						library:config_list_update()
 					end})
 					section:button({name = "Delete", callback = function()
-						delfile(library.directory .. "/configs/" .. flags["config_name_list"] .. ".cfg")
+						local cfgName = flags["config_name_list"] or flags["config_name_text_box"]
+						if not cfgName or cfgName == "" then return end
+						delfile(library.directory .. "/configs/" .. cfgName .. ".cfg")
 						library:config_list_update()
 					end})
-					section:button_holder({})
 					section:button({name = "Load", callback = function()
-						library:load_config(readfile(library.directory .. "/configs/" .. flags["config_name_list"] .. ".cfg"))
-						library:notification({text = "Loaded Config: " .. flags["config_name_list"], time = 3})
+						local cfgName = flags["config_name_list"] or flags["config_name_text_box"]
+						if not cfgName or cfgName == "" then return end
+						library:load_config(readfile(library.directory .. "/configs/" .. cfgName .. ".cfg"))
+						library:notification({text = "Loaded Config: " .. cfgName, time = 3})
 					end})
 					section:button({name = "Save", callback = function()
-						writefile(library.directory .. "/configs/" .. flags["config_name_list"] .. ".cfg", library:get_config())
+						local cfgName = flags["config_name_list"] or flags["config_name_text_box"]
+						if not cfgName or cfgName == "" then return end
+						writefile(library.directory .. "/configs/" .. cfgName .. ".cfg", library:get_config())
 						library:config_list_update()
-						library:notification({text = "Saved Config: " .. flags["config_name_list"], time = 3})
+						library:notification({text = "Saved Config: " .. cfgName, time = 3})
 					end})
 					section:button_holder({})
 					section:button({name = "Refresh Configs", callback = function()
